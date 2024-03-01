@@ -1,5 +1,16 @@
 {
+  "name": "bubble-nav",
+  "version": "1.0.0",
+  "description": "Interaction experiments for toronto tech week",
+  "default": "index.html",
+  "author": "Alvin Leung <alvinleung2009@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "parcel": "^2.12.0"
+  },
+  "scripts": {
+    "copy-img": "cp -vR ./assets/images ./dist",
+    "start": "rm -rf dist .parcel-cache && npm run copy-img && parcel src/index.html",
+    "build": "rm -rf dist .parcel-cache && npm run copy-img && parcel build src/index.html"
   }
 }
