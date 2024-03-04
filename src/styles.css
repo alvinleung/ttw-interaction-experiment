@@ -4,6 +4,27 @@ canvas {
 }
 
 body {
-  height: 300vh;
-  /* background-color: black; */
+  background-color: #030303;
+  color: #c0c4d5;
+  font-family: sans-serif;
+}
+
+.image-link-wrapper {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.image-link {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  background-color: #1c1c1c;
+
+  cursor: none;
+}
+svg text {
+  text-anchor: middle;
+  dominant-baseline: middle;
 }
