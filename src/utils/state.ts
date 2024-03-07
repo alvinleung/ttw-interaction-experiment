@@ -9,12 +9,16 @@ type State<T> = {
 export function state<T>(initial: T): State<T> {
   const listeners: Array<StateChangeHandler<T>> = [];
   let curr = initial;
-  const set = (value: T) => {
-    if (value === curr) return;
-    curr = value;
+
+  const triggerListener = (value: T) => {
     listeners.forEach((handler: StateChangeHandler<T>) => {
       handler(value);
     });
+  };
+  const set = (value: T) => {
+    if (value === curr) return;
+    curr = value;
+    triggerListener(value);
   };
   const get = () => curr;
   const onChange = (handler: StateChangeHandler<T>) => {
