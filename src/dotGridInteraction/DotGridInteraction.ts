@@ -156,11 +156,23 @@ function createDotGrid(
     );
   });
 
+  let mouseDownTimeout;
+  const MOUSE_UP_DELAY = 250;
+  let mouseDownTime = Date.now();
+
   const handleMouseDown = () => {
     isMouseDown.set(true);
+    mouseDownTime = Date.now();
   };
+
   const handleMouseUp = () => {
-    isMouseDown.set(false);
+    if (mouseDownTimeout) clearTimeout(mouseDownTimeout);
+    const elapsedSinceMouseDown = Date.now() - mouseDownTime;
+
+    mouseDownTimeout = setTimeout(
+      () => isMouseDown.set(false),
+      Math.max(0, MOUSE_UP_DELAY - elapsedSinceMouseDown)
+    );
   };
 
   svg.addEventListener("pointermove", handleMouseMove);
@@ -323,8 +335,8 @@ function updateDot(
 
   // staggering transition on hover
   dot.elm.style.transition = `
-    opacity 0.1s linear ${distFactor * 0.06}s,
-    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) ${distFactor * 0.06}s
+    opacity 0.1s linear ${distFactor * 0.1}s,
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) ${distFactor * 0.1}s
   `;
 
   // the pulling effect
