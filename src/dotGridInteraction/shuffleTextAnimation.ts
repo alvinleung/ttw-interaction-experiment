@@ -1,12 +1,9 @@
-export function triggerShuffleAnimation(
-  textElm: SVGTextElement,
-  text: string
-): void {
+export function triggerShuffleAnimation(textElm: SVGTextElement, text: string) {
   const originalParent = textElm.parentElement;
 
   if (!originalParent) {
     console.error("Parent element of <text> element not found.");
-    return;
+    return () => {};
   }
 
   const originalIndex = Array.from(originalParent.children).indexOf(textElm);
@@ -14,9 +11,9 @@ export function triggerShuffleAnimation(
   let shuffleInterval = setInterval(() => {
     console.log("shulffle");
     shuffleSvgText(textElm);
-  }, 66); // Shuffle every 2 seconds
+  }, 1000 / 24); // Shuffle every 2 seconds
 
-  const restoreAnimation = () => {
+  const stopAnimation = () => {
     // Return the text element to its original position and content
     const currentParent = textElm.parentElement;
     if (currentParent) {
@@ -29,9 +26,14 @@ export function triggerShuffleAnimation(
     clearInterval(shuffleInterval);
   };
 
-  setTimeout(restoreAnimation, 300); // Restore every .5 seconds
+  let timeout = setTimeout(stopAnimation, 400); // Restore every .5 seconds
 
   // restoreAnimation();
+
+  return () => {
+    stopAnimation();
+    clearTimeout(timeout);
+  };
 }
 
 function shuffleSvgText(textElement: SVGTextElement): void {

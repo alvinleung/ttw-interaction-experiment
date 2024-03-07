@@ -78,18 +78,29 @@ function createDotGrid(
 
   const elmBounds = svg.getBoundingClientRect();
 
+  // update scroll position for the document
+  let scrollY = window.scrollY;
+  const handleScroll = () => {
+    scrollY = window.screenY;
+  };
+  window.addEventListener("scroll", handleScroll);
+
   const handleMouseMove = (e: MouseEvent) => {
     const offsetX = e.clientX - elmBounds.x;
-    const offsetY = e.clientY - elmBounds.y;
+    const offsetY = e.clientY - (elmBounds.y + scrollY);
 
     mousePos.set({ x: offsetX, y: offsetY });
   };
+
+  let cancelShuffleAnimation = () => {};
   const handleMouseEnter = (e: MouseEvent) => {
     isActive.set(true);
-    triggerShuffleAnimation(textLabel, label);
+    cancelShuffleAnimation();
+    cancelShuffleAnimation = triggerShuffleAnimation(textLabel, label);
   };
   const handleMouseLeave = (e: MouseEvent) => {
     isActive.set(false);
+    cancelShuffleAnimation();
   };
 
   const cleanupMouseState = onChangeAny(
@@ -118,6 +129,7 @@ function createDotGrid(
     svg.removeEventListener("mousemove", handleMouseMove);
     svg.removeEventListener("mouseenter", handleMouseEnter);
     svg.removeEventListener("mouseleave", handleMouseLeave);
+    window.removeEventListener("scroll", handleScroll);
     cleanupMouseState();
 
     //TODO: remove dotLink
@@ -222,7 +234,7 @@ function updateDot(
   const dx = mouseX - dot.x;
   const dy = mouseY - dot.y;
   const midX = dot.x + 0.6 * dx;
-  const midY = dot.y + 0.7 * dy;
+  const midY = dot.y + 0.6 * dy;
 
   dot.linkElm.setAttributeNS(null, "x2", `${midX}`);
   dot.linkElm.setAttributeNS(null, "y2", `${midY}`);
