@@ -157,7 +157,7 @@ function createDotGrid(
   });
 
   let mouseDownTimeout;
-  const MOUSE_UP_DELAY = 250;
+  const MOUSE_UP_DELAY = 270;
   let mouseDownTime = Date.now();
 
   const handleMouseDown = () => {
@@ -336,7 +336,7 @@ function updateDot(
   // staggering transition on hover
   dot.elm.style.transition = `
     opacity 0.1s linear ${distFactor * 0.1}s,
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) ${distFactor * 0.1}s
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) ${distFactor * 0.1}s
   `;
 
   // the pulling effect

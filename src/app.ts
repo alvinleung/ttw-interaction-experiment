@@ -23,7 +23,7 @@ const setupAllDotGridInteraction = () => {
       5.5,
       labelCopy?.innerHTML,
       "rgb(192, 196, 213)",
-      labelCopy?.innerHTML === "Coming Soon"
+      labelCopy?.innerHTML.toLowerCase() === "coming soon"
         ? "rgba(192, 196, 213,.5)"
         : "rgba(170, 244, 105, 1)"
     );
