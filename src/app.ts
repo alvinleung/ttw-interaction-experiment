@@ -15,7 +15,14 @@ const setupAllDotGridInteraction = () => {
   // init
   const imageLinkElms = [...document.querySelectorAll(".image-link")];
   const cleanups = imageLinkElms.map((imageLinkElm) => {
-    return setupDotGridInteraction(imageLinkElm as HTMLElement);
+    const labelCopy = imageLinkElm.querySelector(".label");
+
+    return setupDotGridInteraction(
+      imageLinkElm as HTMLElement,
+      75,
+      8,
+      labelCopy?.innerHTML
+    );
   });
 
   return () => {

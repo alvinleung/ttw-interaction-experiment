@@ -54,6 +54,7 @@ function createDotGrid(
 
   const isActive = state(false);
   const mousePos = state({ x: 0, y: 0 });
+  const isMouseDown = state(false);
 
   const cols = Math.floor(width / interval);
   const rows = Math.floor(height / interval);
@@ -105,30 +106,58 @@ function createDotGrid(
 
   const cleanupMouseState = onChangeAny(
     mousePos,
-    isActive
-  )((mousePos, isActive) => {
+    isActive,
+    isMouseDown
+  )((mousePos, isActive, isMouseDown) => {
     textLabel.style.transform = `translate(${mousePos.x}px, ${mousePos.y}px)`;
     if (!isActive) {
       grid.items.forEach((dot) =>
-        updateDot(dot, mousePos.x, mousePos.y, false, defaultColor, accentColor)
+        updateDot(
+          dot,
+          mousePos.x,
+          mousePos.y,
+          false,
+          isMouseDown,
+          defaultColor,
+          accentColor
+        )
       );
       textLabel.style.opacity = "0";
       return;
     }
     textLabel.style.opacity = `1`;
     grid.items.forEach((dot) =>
-      updateDot(dot, mousePos.x, mousePos.y, true, defaultColor, accentColor)
+      updateDot(
+        dot,
+        mousePos.x,
+        mousePos.y,
+        true,
+        isMouseDown,
+        defaultColor,
+        accentColor
+      )
     );
   });
 
-  svg.addEventListener("mousemove", handleMouseMove);
-  svg.addEventListener("mouseenter", handleMouseEnter);
-  svg.addEventListener("mouseleave", handleMouseLeave);
+  const handleMouseDown = () => {
+    isMouseDown.set(true);
+  };
+  const handleMouseUp = () => {
+    isMouseDown.set(false);
+  };
+
+  svg.addEventListener("pointermove", handleMouseMove);
+  svg.addEventListener("pointerenter", handleMouseEnter);
+  svg.addEventListener("pointerleave", handleMouseLeave);
+  svg.addEventListener("pointerdown", handleMouseDown);
+  svg.addEventListener("pointerup", handleMouseUp);
 
   const cleanup = () => {
-    svg.removeEventListener("mousemove", handleMouseMove);
-    svg.removeEventListener("mouseenter", handleMouseEnter);
-    svg.removeEventListener("mouseleave", handleMouseLeave);
+    svg.removeEventListener("pointermove", handleMouseMove);
+    svg.removeEventListener("pointerenter", handleMouseEnter);
+    svg.removeEventListener("pointerleave", handleMouseLeave);
+    svg.removeEventListener("pointerdown", handleMouseDown);
+    svg.removeEventListener("pointerup", handleMouseUp);
     window.removeEventListener("scroll", handleScroll);
     cleanupMouseState();
 
@@ -200,6 +229,7 @@ function updateDot(
   mouseX: number,
   mouseY: number,
   isActive: boolean,
+  isMouseDown: boolean,
   defaultColor: string,
   accentColor: string
 ) {
@@ -212,8 +242,6 @@ function updateDot(
   const distSq = Math.pow(mouseDistX, 2) + Math.pow(mouseDistY, 2);
   const distFactor = distSq / 100000;
 
-  dot.elm.style.opacity = `${distFactor * 10}`;
-
   if (!isActive) {
     dot.linkElm.style.opacity = `${0}`;
 
@@ -224,10 +252,6 @@ function updateDot(
 
     return;
   }
-  dot.elm.style.transition = `
-    opacity 0.1s linear ${distFactor * 0.12}s,
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)
-  `;
 
   // connect to the half way point between mouse and dot
 
@@ -240,8 +264,15 @@ function updateDot(
   dot.linkElm.setAttributeNS(null, "y2", `${midY}`);
 
   const isConnected = distFactor < distMax && distFactor > distMin;
+
   if (isConnected) {
-    dot.linkElm.style.opacity = `${1}`;
+    dot.elm.style.transition = `
+      opacity 0.1s linear,
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)
+    `;
+
+    dot.elm.style.opacity = "1";
+    dot.linkElm.style.opacity = `1`;
 
     // pulling effect
     dot.elm.style.transform = `translate(${-mouseDistX * 0.035}px, ${
@@ -255,11 +286,23 @@ function updateDot(
 
     return;
   }
+
   dot.linkElm.style.opacity = `${0}`;
   dot.linkElm.style.stroke = defaultColor;
   dot.elm.style.stroke = defaultColor;
   dot.elm.style.fill = "transparent";
 
+  // staggering transition on hover
+  dot.elm.style.transition = `
+    opacity 0.1s linear ${distFactor * 0.1}s,
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) ${distFactor * 0.1}s
+  `;
+
   // the pulling effect
-  dot.elm.style.transform = `translate(0px, 0px)`;
+  dot.elm.style.transform = `${
+    isMouseDown
+      ? `translate(${-mouseDistX * 0.02}px, ${-mouseDistY * 0.02}px)`
+      : "translate(0px, 0px)"
+  }`;
+  dot.elm.style.opacity = `${isMouseDown ? distFactor * 0.3 : distFactor * 10}`;
 }

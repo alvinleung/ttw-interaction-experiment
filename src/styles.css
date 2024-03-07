@@ -24,6 +24,9 @@ body {
 
   cursor: none;
 }
+.image-link:hover {
+}
+
 svg text {
   text-anchor: middle;
   dominant-baseline: middle;
