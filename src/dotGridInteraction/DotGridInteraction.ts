@@ -1,4 +1,5 @@
 import { onChangeAny, state } from "../utils/state";
+import { map } from "../utils/utils";
 import { iterateGrid, Grid, createGrid, GridItem } from "./grid";
 import { triggerShuffleAnimation } from "./shuffleTextAnimation";
 
@@ -6,7 +7,9 @@ export function setupDotGridInteraction(
   baseElm: HTMLElement,
   dotInterval = 75,
   dotSize = 8,
-  label = "Label"
+  label = "Label",
+  defaultColor = "rgb(192, 196, 213)",
+  accentColor = "rgba(170, 244, 105, 1)"
 ) {
   const svgns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgns, "svg");
@@ -28,7 +31,16 @@ export function setupDotGridInteraction(
 
   baseElm.appendChild(svg);
 
-  let dotGrid = createDotGrid(svg, width, height, dotInterval, dotSize, label);
+  let dotGrid = createDotGrid(
+    svg,
+    width,
+    height,
+    dotInterval,
+    dotSize,
+    label,
+    defaultColor,
+    accentColor
+  );
 
   return dotGrid.cleanup;
 }
@@ -47,11 +59,10 @@ function createDotGrid(
   height: number,
   interval = 75,
   dotSize = 8,
-  label = "hello"
+  label = "hello",
+  defaultColor = "rgb(192, 196, 213)",
+  accentColor = "rgba(170, 244, 105, 1)"
 ) {
-  const defaultColor = "rgb(192, 196, 213)";
-  const accentColor = "rgba(170, 244, 105, 1)";
-
   const isActive = state(false);
   const mousePos = state({ x: 0, y: 0 });
   const isMouseDown = state(false);
@@ -82,13 +93,17 @@ function createDotGrid(
   // update scroll position for the document
   let scrollY = window.scrollY;
   const handleScroll = () => {
-    scrollY = window.screenY;
+    scrollY = window.scrollY;
   };
+
+  const boundsX = elmBounds.x;
+  const boundsY = elmBounds.y + window.scrollY;
+
   window.addEventListener("scroll", handleScroll);
 
   const handleMouseMove = (e: MouseEvent) => {
-    const offsetX = e.clientX - elmBounds.x;
-    const offsetY = e.clientY - (elmBounds.y + scrollY);
+    const offsetX = e.clientX - boundsX;
+    const offsetY = e.clientY - (boundsY - scrollY);
 
     mousePos.set({ x: offsetX, y: offsetY });
   };
@@ -119,7 +134,8 @@ function createDotGrid(
           false,
           isMouseDown,
           defaultColor,
-          accentColor
+          accentColor,
+          label
         )
       );
       textLabel.style.opacity = "0";
@@ -134,7 +150,8 @@ function createDotGrid(
         true,
         isMouseDown,
         defaultColor,
-        accentColor
+        accentColor,
+        label
       )
     );
   });
@@ -200,6 +217,7 @@ function createLabel(text: string) {
   textElm.setAttributeNS(null, "font-size", `16px`);
 
   textElm.style.pointerEvents = "none";
+  textElm.style.userSelect = "none";
   textElm.style.opacity = "0";
   // textElm.style.transition = "transform 0.1s cubic-bezier(0.16, 1, 0.3, 1)";
   textElm.innerHTML = text;
@@ -231,7 +249,8 @@ function updateDot(
   isActive: boolean,
   isMouseDown: boolean,
   defaultColor: string,
-  accentColor: string
+  accentColor: string,
+  label: string
 ) {
   // dist threshol
   const distMax = 0.2;
@@ -240,6 +259,7 @@ function updateDot(
   const mouseDistX = dot.x - mouseX;
   const mouseDistY = dot.y - mouseY;
   const distSq = Math.pow(mouseDistX, 2) + Math.pow(mouseDistY, 2);
+
   const distFactor = distSq / 100000;
 
   if (!isActive) {
@@ -255,16 +275,21 @@ function updateDot(
 
   // connect to the half way point between mouse and dot
 
-  const dx = mouseX - dot.x;
-  const dy = mouseY - dot.y;
-  const midX = dot.x + 0.6 * dx;
-  const midY = dot.y + 0.6 * dy;
+  const MAX_CHARACTERS = 10;
+  const textWidthFactor = map(label.length, 0, MAX_CHARACTERS, 0.8, 0.4);
 
-  const isConnected = distFactor < distMax && distFactor > distMin;
+  const isTooClose = distFactor < distMin + textWidthFactor * 0.02;
+  const isTooFar = distFactor > distMax;
+  const isConnected = !isTooClose && !isTooFar;
 
   if (isConnected) {
     const dotOffsetPosX = -mouseDistX * 0.035;
     const dotOffsetPosY = -mouseDistY * 0.035;
+
+    const dx = mouseX - dot.x;
+    const dy = mouseY - dot.y;
+    const midX = dot.x + textWidthFactor * dx;
+    const midY = dot.y + 0.7 * dy;
 
     dot.linkElm.setAttributeNS(null, "x1", `${dot.x + dotOffsetPosX}`);
     dot.linkElm.setAttributeNS(null, "y2", `${dot.y + dotOffsetPosY}`);
@@ -273,7 +298,7 @@ function updateDot(
 
     dot.elm.style.transition = `
       opacity 0.1s linear,
-      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0s
     `;
 
     dot.elm.style.opacity = "1";
@@ -298,8 +323,8 @@ function updateDot(
 
   // staggering transition on hover
   dot.elm.style.transition = `
-    opacity 0.1s linear ${distFactor * 0.1}s,
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) ${distFactor * 0.1}s
+    opacity 0.1s linear ${distFactor * 0.06}s,
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) ${distFactor * 0.06}s
   `;
 
   // the pulling effect
@@ -308,5 +333,5 @@ function updateDot(
       ? `translate(${-mouseDistX * 0.02}px, ${-mouseDistY * 0.02}px)`
       : "translate(0px, 0px)"
   }`;
-  dot.elm.style.opacity = `${isMouseDown ? distFactor * 0.3 : distFactor * 10}`;
+  dot.elm.style.opacity = `${isMouseDown ? distFactor * 0.2 : distFactor * 10}`;
 }

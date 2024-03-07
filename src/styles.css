@@ -17,9 +17,11 @@ body {
 }
 
 .image-link {
+  /* important */
   position: relative;
-  width: 550px;
+  width: 30%;
   height: 400px;
+  /* important */
   background-color: #1c1c1c;
 
   cursor: none;
