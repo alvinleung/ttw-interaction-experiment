@@ -217,7 +217,7 @@ function createDotLink(x: number, y: number, color: string) {
   dotLink.setAttributeNS(null, "y2", `${y}`);
   dotLink.setAttributeNS(null, "stroke", `${color}`);
 
-  dotLink.style.strokeWidth = "1";
+  dotLink.style.strokeWidth = "1.5";
   dotLink.style.strokeDasharray = "2";
   dotLink.style.opacity = "0";
 
@@ -260,12 +260,17 @@ function updateDot(
   const midX = dot.x + 0.6 * dx;
   const midY = dot.y + 0.6 * dy;
 
-  dot.linkElm.setAttributeNS(null, "x2", `${midX}`);
-  dot.linkElm.setAttributeNS(null, "y2", `${midY}`);
-
   const isConnected = distFactor < distMax && distFactor > distMin;
 
   if (isConnected) {
+    const dotOffsetPosX = -mouseDistX * 0.035;
+    const dotOffsetPosY = -mouseDistY * 0.035;
+
+    dot.linkElm.setAttributeNS(null, "x1", `${dot.x + dotOffsetPosX}`);
+    dot.linkElm.setAttributeNS(null, "y2", `${dot.y + dotOffsetPosY}`);
+    dot.linkElm.setAttributeNS(null, "x2", `${midX}`);
+    dot.linkElm.setAttributeNS(null, "y2", `${midY}`);
+
     dot.elm.style.transition = `
       opacity 0.1s linear,
       transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)
@@ -275,9 +280,7 @@ function updateDot(
     dot.linkElm.style.opacity = `1`;
 
     // pulling effect
-    dot.elm.style.transform = `translate(${-mouseDistX * 0.035}px, ${
-      -mouseDistY * 0.035
-    }px)`;
+    dot.elm.style.transform = `translate(${dotOffsetPosX}px, ${dotOffsetPosY}px)`;
 
     // highlight colour
     dot.linkElm.style.stroke = accentColor;
@@ -290,6 +293,7 @@ function updateDot(
   dot.linkElm.style.opacity = `${0}`;
   dot.linkElm.style.stroke = defaultColor;
   dot.elm.style.stroke = defaultColor;
+  dot.elm.style.strokeWidth = "2.5";
   dot.elm.style.fill = "transparent";
 
   // staggering transition on hover

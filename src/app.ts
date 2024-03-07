@@ -20,7 +20,7 @@ const setupAllDotGridInteraction = () => {
     return setupDotGridInteraction(
       imageLinkElm as HTMLElement,
       75,
-      8,
+      5.5,
       labelCopy?.innerHTML
     );
   });
